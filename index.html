@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reservar visita</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #EFF2F0;
+    --panel: #FFFFFF;
+    --ink: #223330;
+    --ink-soft: #5C6B67;
+    --teal: #2A6F6F;
+    --teal-dark: #1E5252;
+    --teal-tint: #EAF2F1;
+    --amber: #C98A3E;
+    --amber-tint: #FBF1E4;
+    --coral: #C2542F;
+    --coral-tint: #FBE9E1;
+    --line: #DCE3E0;
+    --danger: #B5493D;
+    --danger-tint: #FBEAE7;
+    --danger-line: #F1C6C0;
+    --radius: 14px;
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin:0;
+    font-family:'Inter', system-ui, sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:640px; margin:0 auto; padding:28px 18px 60px; }
+  header{ margin-bottom:22px; }
+  .eyebrow{
+    font-size:13px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--teal); font-weight:600; margin:0 0 6px;
+  }
+  h1{
+    font-family:'Fraunces', serif; font-weight:600; font-size:28px;
+    margin:0 0 6px; color:var(--ink);
+  }
+  .subtitle{ color:var(--ink-soft); font-size:15px; margin:0; line-height:1.5; }
+
+  .card{
+    background:var(--panel); border-radius:var(--radius); border:1px solid var(--line);
+    padding:18px; margin-top:20px;
+  }
+  .week-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .week-head h2{
+    font-family:'Fraunces', serif; font-size:19px; font-weight:600; margin:0;
+    text-align:center; flex:1;
+  }
+  .nav-btn{
+    width:36px; height:36px; flex:none; border-radius:50%; border:1px solid var(--line);
+    background:#fff; color:var(--teal-dark); font-size:16px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; transition:background .15s;
+  }
+  .nav-btn:hover{ background:var(--teal-tint); }
+
+  .day-row{
+    border:1px solid var(--line); border-radius:12px; margin-bottom:8px;
+    overflow:hidden; transition:border-color .15s;
+  }
+  .day-row.today{ border-color:var(--teal); }
+  .day-row.full .day-btn{ background:var(--danger-tint); }
+  .day-row.selected .day-btn{ background:var(--teal-tint); }
+
+  .day-btn{
+    width:100%; display:flex; align-items:center; gap:12px; padding:12px 14px;
+    background:#F7F9F8; border:none; cursor:pointer; text-align:left; font-family:inherit;
+  }
+  .day-row.past .day-btn{ background:transparent; color:#B9C2BF; cursor:default; }
+
+  .day-date{ display:flex; flex-direction:column; align-items:center; justify-content:center; width:44px; flex:none; }
+  .day-date .dow{ font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); }
+  .day-row.past .day-date .dow{ color:#C3CBC8; }
+  .day-date .num{ font-size:19px; font-weight:700; line-height:1.1; }
+  .day-info{ flex:1; min-width:0; }
+  .day-info .label{ font-size:14.5px; font-weight:600; text-transform:capitalize; }
+  .day-info .count{ font-size:12.5px; color:var(--ink-soft); margin-top:2px; }
+
+  .day-panel{ padding:14px; background:#fff; border-top:1px solid var(--line); animation:expand .15s ease-out; }
+  @keyframes expand{ from{ opacity:0; transform:translateY(-4px);} to{ opacity:1; transform:translateY(0);} }
+
+  .panel-subtitle{ font-size:12.5px; font-weight:600; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.03em; margin:0 0 8px; }
+  .names{ display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+  .name-row{
+    display:flex; align-items:center; justify-content:space-between;
+    background:#F7F9F8; border-radius:9px; padding:8px 11px; font-size:14px;
+  }
+  .name-row .info{ display:flex; flex-direction:column; }
+  .name-row .info .who{ font-weight:600; }
+  .name-row .info .when{ font-size:12.5px; color:var(--ink-soft); }
+  .name-row button{ background:none; border:none; color:var(--danger); font-size:12.5px; cursor:pointer; padding:2px 4px; }
+  .empty-state{ font-size:13.5px; color:var(--ink-soft); padding:2px 0 10px; }
+  .full-msg{ background:var(--danger-tint); color:var(--danger); font-size:13.5px; padding:9px 11px; border-radius:9px; margin-bottom:6px; }
+
+  .slots{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px; }
+  .slot-chip{
+    border:1px solid var(--line); background:#fff; color:var(--ink);
+    padding:8px 12px; border-radius:9px; font-size:13.5px; font-family:inherit;
+    cursor:pointer; transition:background .15s, border-color .15s;
+  }
+  .slot-chip:hover{ background:var(--teal-tint); border-color:var(--teal); }
+  .slot-chip.occupied{
+    background:var(--danger-tint); color:var(--danger); border-color:var(--danger-line);
+    cursor:not-allowed; text-decoration:line-through; opacity:.85;
+  }
+  .slot-chip.occupied:hover{ background:var(--danger-tint); border-color:var(--danger-line); }
+
+  .confirm-box{ background:var(--teal-tint); border-radius:10px; padding:12px; margin-top:4px; }
+  .confirm-box .chosen{ font-size:14px; font-weight:600; margin:0 0 8px; }
+  form.reserve{ display:flex; gap:8px; }
+  input[type=text]{
+    flex:1; border:1px solid var(--line); border-radius:10px; padding:11px 13px;
+    font-size:15px; font-family:inherit; background:#fff; color:var(--ink); min-width:0;
+  }
+  input[type=text]:focus{ outline:2px solid var(--teal); outline-offset:1px; }
+  button.primary{
+    background:var(--teal); color:#fff; border:none; border-radius:10px; padding:0 16px;
+    font-size:14.5px; font-weight:600; cursor:pointer; transition:background .15s; flex:none;
+  }
+  button.primary:hover{ background:var(--teal-dark); }
+
+  .btn-otro{
+    display:inline-flex; align-items:center; gap:6px;
+    margin-top:10px;
+    background:linear-gradient(135deg, var(--coral-tint), var(--amber-tint));
+    color:var(--coral);
+    border:1px solid var(--coral);
+    border-radius:999px;
+    padding:8px 15px;
+    font-size:13px;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+    transition:transform .12s, box-shadow .12s;
+  }
+  .btn-otro:hover{ transform:translateY(-1px); box-shadow:0 3px 10px rgba(194,84,47,.25); }
+
+  .status-msg{ font-size:13px; margin:8px 0 0; min-height:16px; }
+  .status-msg.ok{ color:var(--teal-dark); }
+  .status-msg.err{ color:var(--danger); }
+  .conn-warning{
+    font-size:13px; background:var(--danger-tint); color:var(--danger); padding:10px 12px;
+    border-radius:10px; margin-top:16px; display:none;
+  }
+  .legend{ display:flex; gap:16px; margin-bottom:14px; font-size:12.5px; color:var(--ink-soft); flex-wrap:wrap; }
+  .legend span{ display:flex; align-items:center; gap:6px; }
+  .legend .swatch{ width:10px; height:10px; border-radius:3px; }
+  footer{ text-align:center; font-size:12px; color:var(--ink-soft); margin-top:26px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Agenda de visitas</p>
+    <h1 id="tituloPersona">Reservar día para visitar</h1>
+    <p class="subtitle">Elige un día y un horario disponible entre 7:00 a.m. y 10:00 p.m.</p>
+  </header>
+
+  <div class="card">
+    <div class="week-head">
+      <button class="nav-btn" id="prevBtn" aria-label="Semana anterior">‹</button>
+      <h2 id="weekLabel"></h2>
+      <button class="nav-btn" id="nextBtn" aria-label="Semana siguiente">›</button>
+    </div>
+    <div class="legend">
+      <span><i class="swatch" style="background:#fff;border:1px solid var(--line)"></i> Disponible</span>
+      <span><i class="swatch" style="background:var(--danger-tint);border:1px solid var(--danger-line)"></i> Ocupado</span>
+    </div>
+    <div id="days"></div>
+    <p class="conn-warning" id="connWarning">No se pudo conectar con la base de datos. Revisa la configuración de Firebase en el archivo.</p>
+  </div>
+
+  <footer>Los datos se comparten con todas las personas que usan esta página.</footer>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+/* ======================================================
+   CONFIGURACIÓN — edita estas líneas para tu caso
+   ====================================================== */
+const CONFIG = {
+  nombrePersona: "la hermana Martha Lopez",  // Ej: "Hermano Juan" — aparece en el título
+  horaInicio: 7,                 // 7:00 a.m. — hora más temprana para visitar
+  horaFin: 22,                   // 10:00 p.m. — hora más tardía (no se puede empezar una visita después de esto)
+  duracionVisitaMin: 60,         // cuánto dura cada visita, en minutos
+  intervaloSlotMin: 30,          // cada cuántos minutos se ofrece un horario de inicio (ej. 7:00, 7:30, 8:00...)
+  nodo: "visitas"                // nombre del nodo en la base de datos
+};
+
+// Pega aquí la configuración de tu proyecto de Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyC6-x8TB53PK6tUPYyMDhKeNWlH9NYlk0E",
+  authDomain: "agenda-de-visitas-95fad.firebaseapp.com",
+  databaseURL: "https://agenda-de-visitas-95fad-default-rtdb.firebaseio.com",
+  projectId: "agenda-de-visitas-95fad",
+};
+
+let db = null;
+let firebaseOk = true;
+try{
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+} catch(e){
+  firebaseOk = false;
+}
+
+/* ====================================================== */
+
+document.getElementById("tituloPersona").textContent = "Reservar día para visitar a " + CONFIG.nombrePersona;
+
+const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const DIAS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+const DIAS_CORTO = ["dom","lun","mar","mié","jue","vie","sáb"];
+const HORA_INICIO_MIN = CONFIG.horaInicio * 60;
+const HORA_FIN_MIN = CONFIG.horaFin * 60;
+
+let weekStart = startOfWeek(new Date());
+let weekData = {};        // { "2026-08-17": {pushKey: {nombre, inicio, fin}, ...}, ... }
+let selectedKey = null;   // día expandido
+let selectedSlot = null;  // hora de inicio elegida (minutos), dentro del día expandido
+let weekRef = null;
+
+function pad(n){ return n.toString().padStart(2,"0"); }
+function keyFor(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function todayKey(){ return keyFor(new Date()); }
+function nowMinutes(){ const n = new Date(); return n.getHours()*60 + n.getMinutes(); }
+function startOfWeek(d){ const r = new Date(d); r.setHours(0,0,0,0); r.setDate(r.getDate() - r.getDay()); return r; }
+function addDays(d, n){ const r = new Date(d); r.setDate(r.getDate()+n); return r; }
+function fmtHora(min){
+  const h = Math.floor(min/60), m = min%60;
+  const periodo = h < 12 ? "a.m." : "p.m.";
+  let h12 = h % 12; if(h12 === 0) h12 = 12;
+  return `${h12}:${pad(m)} ${periodo}`;
+}
+function overlap(aStart, aEnd, bStart, bEnd){ return aStart < bEnd && aEnd > bStart; }
+
+function weekLabel(){
+  const end = addDays(weekStart, 6);
+  const sameMonth = weekStart.getMonth() === end.getMonth();
+  if(sameMonth) return `${weekStart.getDate()} - ${end.getDate()} de ${MESES[end.getMonth()]}`;
+  return `${weekStart.getDate()} de ${MESES[weekStart.getMonth()]} - ${end.getDate()} de ${MESES[end.getMonth()]}`;
+}
+
+/* ---------- Horarios ---------- */
+function entriesFor(k){
+  const dayNode = weekData[k];
+  return dayNode ? Object.entries(dayNode) : [];
+}
+
+// Devuelve TODOS los horarios del día con su estado (libre u ocupado)
+function allSlots(k, entries){
+  const isToday = k === todayKey();
+  const now = nowMinutes();
+  const slots = [];
+  for(let s = HORA_INICIO_MIN; s + CONFIG.duracionVisitaMin <= HORA_FIN_MIN; s += CONFIG.intervaloSlotMin){
+    if(isToday && s <= now) continue;
+    const end = s + CONFIG.duracionVisitaMin;
+    const ocupado = !entries.every(([, r]) => !overlap(s, end, r.inicio, r.fin));
+    slots.push({ inicio: s, fin: end, ocupado });
+  }
+  return slots;
+}
+
+/* ---------- Semana ---------- */
+function renderWeek(){
+  document.getElementById("weekLabel").textContent = weekLabel();
+  const container = document.getElementById("days");
+  container.innerHTML = "";
+  const tKey = todayKey();
+
+  for(let i=0;i<7;i++){
+    const d = addDays(weekStart, i);
+    const k = keyFor(d);
+    const isPast = k < tKey;
+    const isToday = k === tKey;
+    const entries = entriesFor(k);
+    const slots = isPast ? [] : allSlots(k, entries);
+    const libres = slots.filter(s => !s.ocupado);
+    const full = !isPast && slots.length > 0 && libres.length === 0;
+
+    const row = document.createElement("div");
+    row.className = "day-row" + (isPast?" past":"") + (isToday?" today":"") + (full?" full":"") + (k===selectedKey?" selected":"");
+
+    const btn = document.createElement("button");
+    btn.className = "day-btn";
+    btn.type = "button";
+    btn.disabled = isPast;
+
+    const dateBox = document.createElement("div");
+    dateBox.className = "day-date";
+    dateBox.innerHTML = `<span class="dow">${DIAS_CORTO[i]}</span><span class="num">${d.getDate()}</span>`;
+
+    const info = document.createElement("div");
+    info.className = "day-info";
+    let countText;
+    if(isPast) countText = "Fecha pasada";
+    else if(full) countText = "Sin horarios disponibles";
+    else countText = `${libres.length} horario${libres.length===1?"":"s"} disponible${libres.length===1?"":"s"}`;
+    info.innerHTML = `<div class="label">${DIAS[i]}</div><div class="count">${countText}</div>`;
+
+    btn.appendChild(dateBox);
+    btn.appendChild(info);
+    if(!isPast) btn.addEventListener("click", () => toggleDay(k));
+    row.appendChild(btn);
+
+    if(k === selectedKey && !isPast){
+      row.appendChild(buildDayPanel(k, entries, slots));
+    }
+    container.appendChild(row);
+  }
+}
+
+function toggleDay(k){
+  selectedSlot = null;
+  selectedKey = (selectedKey === k) ? null : k;
+  renderWeek();
+}
+
+function buildDayPanel(k, entries, slots){
+  const panel = document.createElement("div");
+  panel.className = "day-panel";
+
+  if(entries.length > 0){
+    const sub = document.createElement("p");
+    sub.className = "panel-subtitle";
+    sub.textContent = "Visitas ya agendadas";
+    panel.appendChild(sub);
+
+    const namesWrap = document.createElement("div");
+    namesWrap.className = "names";
+    entries
+      .sort((a,b) => a[1].inicio - b[1].inicio)
+      .forEach(([pushKey, r]) => {
+        const row = document.createElement("div");
+        row.className = "name-row";
+        row.innerHTML = `<div class="info"><span class="who">${r.nombre}</span><span class="when">${fmtHora(r.inicio)} – ${fmtHora(r.fin)}</span></div>`;
+        const cancelBtn = document.createElement("button");
+        cancelBtn.type = "button";
+        cancelBtn.textContent = "Cancelar";
+        cancelBtn.addEventListener("click", () => cancelarReserva(k, pushKey, r.nombre));
+        row.appendChild(cancelBtn);
+        namesWrap.appendChild(row);
+      });
+    panel.appendChild(namesWrap);
+  }
+
+  if(slots.length === 0){
+    const msg = document.createElement("div");
+    msg.className = "full-msg";
+    msg.textContent = "Este día ya no tiene horarios dentro del rango permitido.";
+    panel.appendChild(msg);
+    return panel;
+  }
+
+  const sub2 = document.createElement("p");
+  sub2.className = "panel-subtitle";
+  sub2.textContent = "Elige un horario";
+  panel.appendChild(sub2);
+
+  const libreSeleccionado = selectedSlot !== null && slots.some(s => s.inicio === selectedSlot && !s.ocupado);
+
+  if(libreSeleccionado){
+    const box = document.createElement("div");
+    box.className = "confirm-box";
+    const fin = selectedSlot + CONFIG.duracionVisitaMin;
+    box.innerHTML = `<p class="chosen">Visita de ${fmtHora(selectedSlot)} a ${fmtHora(fin)}</p>`;
+    const form = document.createElement("form");
+    form.className = "reserve";
+    form.innerHTML = `
+      <input type="text" id="nombreInput" placeholder="Tu nombre" maxlength="40" autocomplete="off">
+      <button type="submit" class="primary">Reservar</button>
+    `;
+    form.addEventListener("submit", (e) => { e.preventDefault(); reservar(k); });
+    box.appendChild(form);
+    const status = document.createElement("p");
+    status.className = "status-msg";
+    status.id = "statusMsg";
+    box.appendChild(status);
+    panel.appendChild(box);
+
+    const backBtn = document.createElement("button");
+    backBtn.type = "button";
+    backBtn.className = "btn-otro";
+    backBtn.textContent = "↻ Elegir otro horario";
+    backBtn.addEventListener("click", () => { selectedSlot = null; renderWeek(); });
+    panel.appendChild(backBtn);
+  } else {
+    const chips = document.createElement("div");
+    chips.className = "slots";
+    slots.forEach(s => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "slot-chip" + (s.ocupado ? " occupied" : "");
+      chip.textContent = fmtHora(s.inicio);
+      if(s.ocupado){
+        chip.disabled = true;
+      } else {
+        chip.addEventListener("click", () => { selectedSlot = s.inicio; renderWeek(); requestAnimationFrame(() => document.getElementById("nombreInput")?.focus()); });
+      }
+      chips.appendChild(chip);
+    });
+    panel.appendChild(chips);
+  }
+
+  return panel;
+}
+
+function reservar(k){
+  const input = document.getElementById("nombreInput");
+  const nombre = input.value.trim();
+  const statusMsg = document.getElementById("statusMsg");
+  if(!nombre){
+    statusMsg.textContent = "Escribe tu nombre para reservar.";
+    statusMsg.className = "status-msg err";
+    return;
+  }
+  if(!firebaseOk || !db){
+    statusMsg.textContent = "No hay conexión con la base de datos.";
+    statusMsg.className = "status-msg err";
+    return;
+  }
+  const entries = entriesFor(k);
+  const end = selectedSlot + CONFIG.duracionVisitaMin;
+  const stillFree = entries.every(([, r]) => !overlap(selectedSlot, end, r.inicio, r.fin));
+  if(!stillFree){
+    statusMsg.textContent = "Ese horario se acaba de ocupar. Elige otro.";
+    statusMsg.className = "status-msg err";
+    selectedSlot = null;
+    renderWeek();
+    return;
+  }
+  db.ref(`${CONFIG.nodo}/${k}`).push({ nombre, inicio: selectedSlot, fin: end })
+    .then(() => {
+      selectedSlot = null;
+    })
+    .catch(() => {
+      statusMsg.textContent = "No se pudo guardar. Intenta de nuevo.";
+      statusMsg.className = "status-msg err";
+    });
+}
+
+function cancelarReserva(k, pushKey, nombre){
+  if(!confirm(`¿Cancelar la visita de "${nombre}"?`)) return;
+  if(!firebaseOk || !db) return;
+  db.ref(`${CONFIG.nodo}/${k}/${pushKey}`).remove();
+}
+
+function listenToWeek(){
+  renderWeek(); // dibuja de inmediato, con o sin datos
+  if(!firebaseOk || !db){
+    document.getElementById("connWarning").style.display = "block";
+    return;
+  }
+  if(weekRef) weekRef.off();
+  const start = keyFor(weekStart);
+  const end = keyFor(addDays(weekStart, 6));
+  weekRef = db.ref(CONFIG.nodo).orderByKey().startAt(start).endAt(end);
+  weekRef.on("value", snap => {
+    weekData = snap.val() || {};
+    renderWeek();
+  }, () => {
+    document.getElementById("connWarning").style.display = "block";
+  });
+}
+
+document.getElementById("prevBtn").addEventListener("click", () => {
+  weekStart = addDays(weekStart, -7);
+  selectedKey = null; selectedSlot = null;
+  listenToWeek();
+});
+document.getElementById("nextBtn").addEventListener("click", () => {
+  weekStart = addDays(weekStart, 7);
+  selectedKey = null; selectedSlot = null;
+  listenToWeek();
+});
+
+listenToWeek();
+</script>
+</body>
+</html>
